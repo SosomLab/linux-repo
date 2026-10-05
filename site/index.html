@@ -20,7 +20,7 @@
 <body>
 <main>
 <h1>SosomLab Linux Repository</h1>
-<p class="lead">Signed APT repository for SosomLab apps · <code>pkg.sosomlab.com</code></p>
+<p class="lead">Signed APT<!--RPM--> · RPM<!--/RPM--> repository for SosomLab apps · <code>pkg.sosomlab.com</code></p>
 
 <h2>Packages</h2>
 <table>
@@ -34,16 +34,29 @@
 sudo curl -fsSLo /etc/apt/sources.list.d/sosomlab.sources https://pkg.sosomlab.com/apt/sosomlab.sources
 sudo apt update
 sudo apt install nexa-clip</code></pre>
+<!--RPM-->
+<h2>Fedora · RHEL · Rocky · AlmaLinux (dnf)</h2>
+<p>Add the repository once, then install with <code>dnf</code>. Updates arrive with <code>dnf upgrade</code>.
+On the first install dnf asks to import the signing key — check that its fingerprint matches the one below.</p>
+<pre><code>sudo curl -fsSLo /etc/yum.repos.d/sosomlab.repo https://pkg.sosomlab.com/rpm/sosomlab.repo
+sudo dnf install nexa-clip</code></pre>
+<!--/RPM-->
 
 <h2>Signing key</h2>
 <p>Fingerprint: <code class="fpr">{{FINGERPRINT}}</code><br>
 Key files: <a href="/sosomlab-archive-keyring.gpg">sosomlab-archive-keyring.gpg</a> (binary, for apt) ·
-<a href="/sosomlab-archive-keyring.asc">sosomlab-archive-keyring.asc</a> (ASCII armored)</p>
+<a href="/sosomlab-archive-keyring.asc">sosomlab-archive-keyring.asc</a> (ASCII armored<!--RPM-->, for dnf<!--/RPM-->)</p>
 
 <h2>Remove</h2>
-<pre><code>sudo apt remove nexa-clip
+<pre><code># apt
+sudo apt remove nexa-clip
 sudo rm /etc/apt/sources.list.d/sosomlab.sources /usr/share/keyrings/sosomlab-archive-keyring.gpg
 sudo apt update</code></pre>
+<!--RPM-->
+<pre><code># dnf
+sudo dnf remove nexa-clip
+sudo rm /etc/yum.repos.d/sosomlab.repo</code></pre>
+<!--/RPM-->
 
 <h2>License</h2>
 <p>SosomLab apps are licensed under PolyForm Noncommercial 1.0.0 — free for noncommercial use only.
@@ -51,7 +64,8 @@ Package files are served from each app's GitHub Releases; this site hosts the si
 
 <h2>한국어 안내</h2>
 <p>위 <b>apt</b> 명령 4줄을 한 번 실행하면 저장소가 등록되고, 이후 <code>sudo apt upgrade</code>로 SosomLab 앱이 자동 갱신됩니다.
-비상업적 사용만 허용됩니다(PolyForm Noncommercial 1.0.0).</p>
+<!--RPM-->Fedora·RHEL 계열은 위 <b>dnf</b> 명령 2줄로 등록·설치하고 <code>sudo dnf upgrade</code>로 갱신합니다(처음 설치 때 서명 키 가져오기를 물으면 지문을 확인하고 승인).
+<!--/RPM-->비상업적 사용만 허용됩니다(PolyForm Noncommercial 1.0.0).</p>
 </main>
 </body>
 </html>

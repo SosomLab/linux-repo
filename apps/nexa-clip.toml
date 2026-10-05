@@ -15,6 +15,8 @@ summary = "Clipboard manager that looks the same on Windows, macOS and Linux"
 [deb]
 amd64 = "nexa-clip-{version}-linux-x64.deb"
 
-# RPM은 앱 릴리스가 .rpm을 만들기 시작하면 주석을 푼다(지금 Nexa Clip 릴리스에는 .rpm이 없다).
-# [rpm]
-# x86_64 = "nexa-clip-{version}-linux-x64.rpm"
+# RPM — 릴리스에 이 자산이 없으면 생성기가 경고만 하고 건너뛴다(APT 발행은 그대로).
+# 앱 릴리스가 .rpm을 올리기 시작하면 다음 발행부터 dnf 저장소와 사이트 RPM 안내가 저절로 나타난다.
+# .rpm 안의 Name은 위 package와 같아야 한다(dnf가 이 이름으로 설치).
+[rpm]
+x86_64 = "nexa-clip-{version}-linux-x64.rpm"
