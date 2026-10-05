@@ -22,7 +22,7 @@ sudo dnf install nexa-clip
 | `apps/*.toml` | **앱 등록**(파일 하나 = 앱 하나) — [docs/ADDING-AN-APP.md](docs/ADDING-AN-APP.md) |
 | `scripts/build_repo.py` | 등록 앱의 최신 GitHub Release로 색인 생성 · GPG 서명 · `_redirects` 생성 → `public/` |
 | `scripts/test_apt_local.sh` · `serve_local.py` | 배포 전 로컬 검증(root 없이 apt가 서명 검증 + 리다이렉트로 받는지) |
-| `site/` | 사이트 정적 파일(`index.html` 설치 안내 · `_headers` 캐시 금지 · `_redirects` 머리) |
+| `site/` | 사이트 정적 파일(`index.html` 설치 안내 · `404.html` 없는 경로는 진짜 404 · `_headers` 캐시 금지 · `_redirects` 머리) |
 | `.github/workflows/publish.yml` | 생성 → Cloudflare Pages(`linux-repo` 프로젝트) 배포 · 수동 / 앱 릴리스 신호 / 하루 1회 · 실행 Summary에 요청 · 진행 기록 |
 | `docs/SETUP.md` | 처음 설정 순서(사용자 할 일 포함) |
 | `docs/KEYS.md` | 서명 키 위치 · 백업 · 다른 PC · 연장 · 폐기 |
