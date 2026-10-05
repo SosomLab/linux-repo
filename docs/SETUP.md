@@ -54,18 +54,20 @@
   ```
   지금 설치본(로컬 `.deb` 0.1.6 표시)이 저장소의 0.1.7로 올라간다 — 실행 중이면 앱을 한 번 재시작.
 
-## 7. 앱 저장소와 잇기 — 진행 중
+## 7. 앱 저장소와 잇기 — ✅ 완료(10-05 · v0.1.8 릴리스 신호로 publish 자동 실행 · 실사이트 0.1.8 반영)
 
-- 앱 릴리스 끝에 발행 신호 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4. Nexa Clip은 그 저장소의 개발 세션이 `release.yml`에 넣는다 — ⏳ 남음.
+- 앱 릴리스 끝에 발행 신호 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4. Nexa Clip `release.yml`에 연결 — ✅ 완료(10-05 · v0.1.8 신호 → publish [37263714314](https://github.com/SosomLab/linux-repo/actions/runs/37263714314) 성공).
 - [사용자] `LINUX_REPO_DISPATCH_TOKEN`(fine-grained · `SosomLab/linux-repo` Contents Read/write) 발급 → `SosomLab/nexa-clip` 시크릿에 등록 — ✅ 완료(10-05 · dispatch 204 · `repository_dispatch` publish 성공).
-- [세션] `publish` 실행 기록 — 실행 화면 Summary에 **요청 기록**(종류 · 실행 주체 · 접수 시각 · 신호의 `client_payload`)과 **진행 기록**(단계별 결과 · 버전 변화 · 배포 여부)을 남기고, 외부 요청은 실행 이름에 앱 · 태그를 붙인다 — ✅ 완료(10-05 · 로컬 모의 실행으로 출력 확인 · 실제 Actions 실행 확인은 다음 신호/수동 실행 때 ⏳).
+- [세션] `publish` 실행 기록 — 실행 화면 Summary에 **요청 기록**(종류 · 실행 주체 · 접수 시각 · 신호의 `client_payload`)과 **진행 기록**(단계별 결과 · 버전 변화 · 배포 여부)을 남기고, 외부 요청은 실행 이름에 앱 · 태그를 붙인다 — ✅ 완료(10-05 · v0.1.8 신호 실행에서 실이름 `publish · 외부 요청 · nexa-clip v0.1.8` · 요청 기록에 `app` · `tag` · `repo` · `run_url` 확인).
   - 보낸 쪽(저장소 · 실행 주소)까지 남으려면 신호가 `app` · `tag` · `repo` · `run_url`을 실어야 한다 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4 예시(갱신됨). Nexa Clip `release.yml`에 넣을 때 이 예시를 쓴다.
   - 기록은 Actions 실행에 붙어 GitHub 보존 기간(기본 90일)까지만 남는다.
 
 ## 8. RPM(dnf) — 진행 중
 
-- [세션] 생성기 · 사이트 준비 — ✅ 완료(10-05). `apps/nexa-clip.toml`의 `[rpm]`을 켰다.
+- [세션] 생성기 · 사이트 준비 — ✅ 완료(10-05 · `e2a9ba6`). `apps/nexa-clip.toml`의 `[rpm]`을 켰다.
+  - CI에서 새 경로(`[rpm]` 있음 → createrepo-c 설치 · `.rpm` 없음 경고)가 도는 것은 아직 못 봤다 — v0.1.8 실행은 그 이전 커밋(`389fa3c`)으로 돌았다. 다음 정기/수동 실행 Summary에서 확인 — ⏳.
   - 릴리스에 `.rpm`이 없으면 생성기가 `::warning::`만 남기고 건너뛴다 — APT 발행은 그대로, 사이트의 dnf 안내(`<!--RPM-->` 블록)도 빠진다(v0.1.7 로컬 실행 + `test_apt_local.sh` 통과로 확인).
   - `.rpm`이 생기면 다음 발행부터 `rpm/sosomlab.repo` · 서명된 `repodata` · 사이트 dnf 설치·제거 안내가 저절로 나타난다.
-- Nexa Clip 릴리스가 `nexa-clip-{version}-linux-x64.rpm`(`.rpm` 안 Name = `nexa-clip`)을 올린다 — 그 저장소의 개발 세션 몫 — ⏳ 남음.
+- [세션] 사이트 `404.html` 추가 — ✅ 10-05. 없으면 Pages가 없는 경로에 200 + `index.html`을 준다(실측: `/rpm/sosomlab.repo` → HTML) → `.rpm` 발행 전에 dnf 안내를 따라 하면 HTML이 `/etc/yum.repos.d`에 저장된다. 이제 진짜 404 — 다음 배포부터.
+- Nexa Clip 릴리스(v0.1.8 현재 `.rpm` 없음)가 `nexa-clip-{version}-linux-x64.rpm`(`.rpm` 안 Name = `nexa-clip`)을 올린다 — 그 저장소의 개발 세션 몫 — ⏳ 남음.
 - 첫 `.rpm` 발행 뒤 Fedora/Rocky에서 `dnf install` 실기(createrepo_c 색인 · `repomd.xml.asc` 서명 · GitHub 302 내려받기) — ⏳ 남음(이 PC엔 createrepo_c · dnf가 없어 RPM 생성 경로는 아직 실행된 적 없다).

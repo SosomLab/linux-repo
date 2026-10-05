@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not Found · SosomLab Linux Repository</title>
+<style>
+	:root { --bg:#ffffff; --fg:#1f2328; --accent:#0969da; }
+	@media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --fg:#e6edf3; --accent:#4493f8; } }
+	body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+	main { max-width:860px; margin:0 auto; padding:32px 16px; } a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<!-- Pages는 404.html이 없으면 없는 경로에 200 + index.html을 준다(SPA 동작) → apt/dnf가 HTML을 색인·저장소 파일로 받는다. 이 파일이 있으면 진짜 404. -->
+<h1>404 — Not Found</h1>
+<p>This file is not in the repository. See <a href="/">pkg.sosomlab.com</a> for install instructions.</p>
+</main>
+</body>
+</html>
