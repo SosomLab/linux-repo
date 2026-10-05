@@ -1,0 +1,6 @@
+# 생성물 — CI가 만들어 배포한다(저장소에 싣지 않는다)
+/public/
+__pycache__/
+# 서명 개인 키는 절대 커밋하지 않는다
+*.asc.private
+*-private.asc

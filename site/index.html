@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SosomLab Linux Repository</title>
+<style>
+	:root { --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --code:#f6f8fa; --line:#d1d9e0; --accent:#0969da; }
+	@media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --code:#151b23; --line:#3d444d; --accent:#4493f8; } }
+	body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+	main { max-width:860px; margin:0 auto; padding:32px 16px 64px; }
+	h1 { margin:0 0 4px; font-size:1.8rem; } h2 { margin-top:2.2rem; border-bottom:1px solid var(--line); padding-bottom:4px; }
+	p.lead { color:var(--muted); margin-top:0; }
+	pre { background:var(--code); border:1px solid var(--line); border-radius:6px; padding:12px; overflow-x:auto; font-size:.9rem; }
+	code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+	table { border-collapse:collapse; width:100%; } td, th { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; }
+	a { color:var(--accent); } .fpr { word-break:break-all; }
+</style>
+</head>
+<body>
+<main>
+<h1>SosomLab Linux Repository</h1>
+<p class="lead">Signed APT repository for SosomLab apps · <code>pkg.sosomlab.com</code></p>
+
+<h2>Packages</h2>
+<table>
+<tr><th>Package</th><th>Version</th><th>Description</th></tr>
+{{PACKAGES}}
+</table>
+
+<h2>Debian · Ubuntu (apt)</h2>
+<p>Add the signing key and the repository once, then install any SosomLab app with <code>apt</code>. Updates arrive with <code>apt upgrade</code>.</p>
+<pre><code>sudo curl -fsSLo /usr/share/keyrings/sosomlab-archive-keyring.gpg https://pkg.sosomlab.com/sosomlab-archive-keyring.gpg
+sudo curl -fsSLo /etc/apt/sources.list.d/sosomlab.sources https://pkg.sosomlab.com/apt/sosomlab.sources
+sudo apt update
+sudo apt install nexa-clip</code></pre>
+
+<h2>Signing key</h2>
+<p>Fingerprint: <code class="fpr">{{FINGERPRINT}}</code><br>
+Key files: <a href="/sosomlab-archive-keyring.gpg">sosomlab-archive-keyring.gpg</a> (binary, for apt) ·
+<a href="/sosomlab-archive-keyring.asc">sosomlab-archive-keyring.asc</a> (ASCII armored)</p>
+
+<h2>Remove</h2>
+<pre><code>sudo apt remove nexa-clip
+sudo rm /etc/apt/sources.list.d/sosomlab.sources /usr/share/keyrings/sosomlab-archive-keyring.gpg
+sudo apt update</code></pre>
+
+<h2>License</h2>
+<p>SosomLab apps are licensed under PolyForm Noncommercial 1.0.0 — free for noncommercial use only.
+Package files are served from each app's GitHub Releases; this site hosts the signed index.</p>
+
+<h2>한국어 안내</h2>
+<p>위 <b>apt</b> 명령 4줄을 한 번 실행하면 저장소가 등록되고, 이후 <code>sudo apt upgrade</code>로 SosomLab 앱이 자동 갱신됩니다.
+비상업적 사용만 허용됩니다(PolyForm Noncommercial 1.0.0).</p>
+</main>
+</body>
+</html>

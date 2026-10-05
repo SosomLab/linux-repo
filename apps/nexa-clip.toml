@@ -1,0 +1,20 @@
+# Nexa Clip — pkg.sosomlab.com 등록 파일
+#
+# 이 파일 하나가 "앱 등록"이다. 다른 앱도 같은 모양으로 apps/<패키지 이름>.toml을 추가한다.
+# 저장소 생성기(scripts/build_repo.py)는 GitHub의 최신 정식 릴리스에서 아래 자산을 찾아
+# 색인을 만들고, 패키지 파일 자체는 GitHub Release로 302 리다이렉트한다(파일을 여기 싣지 않는다).
+#
+# ⚠️ 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다 — 서명된 색인의 해시가 그 파일을 가리킨다.
+
+package = "nexa-clip"            # apt/dnf 패키지 이름(.deb 안의 Package와 같아야 한다)
+github = "SosomLab/nexa-clip"    # 릴리스를 가져올 저장소
+tag_prefix = "v"                 # 태그 = v<버전>
+summary = "Clipboard manager that looks the same on Windows, macOS and Linux"
+
+# 자산 이름 규칙 — {version}은 태그에서 tag_prefix를 뗀 값.
+[deb]
+amd64 = "nexa-clip-{version}-linux-x64.deb"
+
+# RPM은 앱 릴리스가 .rpm을 만들기 시작하면 주석을 푼다(지금 Nexa Clip 릴리스에는 .rpm이 없다).
+# [rpm]
+# x86_64 = "nexa-clip-{version}-linux-x64.rpm"

@@ -1,0 +1,10 @@
+# Cloudflare Pages 헤더 — 색인·서명은 배포 즉시 새것을 보게 한다(옛 색인과 섞이면 apt 해시 불일치).
+# ⚠️ zone 캐시 규칙(Cache Rules)을 pkg.sosomlab.com에 걸지 않는다.
+/apt/*
+  Cache-Control: no-cache
+/rpm/*
+  Cache-Control: no-cache
+/repo.json
+  Cache-Control: no-cache
+/sosomlab-archive-keyring.*
+  Cache-Control: no-cache
