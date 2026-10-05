@@ -1,0 +1,16 @@
+# Nexa Dir — pkg.sosomlab.com 등록 파일(nexa-dir3 · 2026-10-05 v0.23.0 첫 정식 릴리스 · 등록 순서 = docs/ADDING-AN-APP.md)
+#
+# 저장소 생성기(scripts/build_repo.py)는 GitHub의 최신 정식 릴리스에서 아래 자산을 찾아 색인을 만들고,
+# 패키지 파일 자체는 GitHub Release로 302 리다이렉트한다. 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다.
+
+package = "nexa-dir"             # .deb 안 Package · .rpm 안 Name과 같다
+github = "SosomLab/nexa-dir3"    # 릴리스를 가져올 저장소(제품명 Nexa Dir · 코드는 nexa-dir3)
+tag_prefix = "v"                 # 태그 = v<버전>
+summary = "Lightweight dual-panel file explorer that looks the same on Windows, macOS and Linux"
+
+# 자산 이름 규칙 — nexa-dir3 packaging/linux/build-deb.sh(nexa-dir_<ver>_amd64.deb) · build-rpm.sh(rpmbuild 기본 이름 · Release 1).
+[deb]
+amd64 = "nexa-dir_{version}_amd64.deb"
+
+[rpm]
+x86_64 = "nexa-dir-{version}-1.x86_64.rpm"
