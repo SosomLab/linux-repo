@@ -18,16 +18,25 @@
    bash scripts/test_apt_local.sh public <패키지 이름>   # 서명 검증 + 리다이렉트 내려받기 통과 확인
    ```
 3. 커밋·push → Actions의 `publish`를 수동 실행(또는 다음 정기 실행).
-4. 앱 저장소 release 워크플로 끝에 **발행 신호**를 단다(릴리스마다 저장소가 바로 갱신되게):
+4. 앱 저장소 release 워크플로 끝에 **발행 신호** 잡을 단다(릴리스가 **공개된 뒤** 저장소가 바로 갱신되게):
    ```yaml
-   - name: pkg.sosomlab.com 갱신 신호
-     if: ${{ secrets.LINUX_REPO_DISPATCH_TOKEN != '' }}
-     run: |
-       curl -fsS -X POST https://api.github.com/repos/SosomLab/linux-repo/dispatches \
-         -H "Authorization: Bearer ${{ secrets.LINUX_REPO_DISPATCH_TOKEN }}" \
-         -H "Accept: application/vnd.github+json" \
-         -d '{"event_type":"app-released","client_payload":{"app":"<패키지 이름>"}}'
+     linux-repo:
+       needs: [meta, publish]            # 릴리스 공개 잡 뒤 — 앱 워크플로의 잡 이름에 맞춘다
+       if: github.ref_type == 'tag' && needs.meta.outputs.prerelease != 'true'
+       runs-on: ubuntu-latest
+       steps:
+         - name: pkg.sosomlab.com 갱신 신호
+           env:
+             TOKEN: ${{ secrets.LINUX_REPO_DISPATCH_TOKEN }}
+           run: |
+             if [ -z "$TOKEN" ]; then echo "::notice::LINUX_REPO_DISPATCH_TOKEN 없음 — 정기 실행이 반영"; exit 0; fi
+             curl -fsS -X POST https://api.github.com/repos/SosomLab/linux-repo/dispatches \
+               -H "Authorization: Bearer $TOKEN" \
+               -H "Accept: application/vnd.github+json" \
+               -d '{"event_type":"app-released","client_payload":{"app":"<패키지 이름>"}}'
    ```
+   ⚠️ 스텝 `if:`에서는 `secrets`를 읽을 수 없다(워크플로 전체가 문법 오류) — 그래서 토큰 유무는 셸에서 본다.
    `LINUX_REPO_DISPATCH_TOKEN` = `SosomLab/linux-repo`에 **Contents: Read and write**(fine-grained · dispatch에 필요) 권한만 준 토큰 · 앱 저장소 시크릿에 등록.
+   토큰 확인(로컬): `read -rs T; curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Authorization: Bearer $T" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SosomLab/linux-repo/dispatches -d '{"event_type":"app-released"}'` → `204`면 정상(linux-repo의 publish가 한 번 돈다).
    신호가 없어도 하루 한 번 정기 실행이 최신 릴리스를 잡는다.
 5. 사이트 `https://pkg.sosomlab.com/`의 패키지 표에 새 앱이 보이면 끝. 사용자는 저장소를 이미 등록했다면 `sudo apt install <패키지 이름>`만 하면 된다.
