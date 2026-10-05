@@ -33,8 +33,9 @@
              curl -fsS -X POST https://api.github.com/repos/SosomLab/linux-repo/dispatches \
                -H "Authorization: Bearer $TOKEN" \
                -H "Accept: application/vnd.github+json" \
-               -d '{"event_type":"app-released","client_payload":{"app":"<패키지 이름>"}}'
+               -d "{\"event_type\":\"app-released\",\"client_payload\":{\"app\":\"<패키지 이름>\",\"tag\":\"$GITHUB_REF_NAME\",\"repo\":\"$GITHUB_REPOSITORY\",\"run_url\":\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID\"}}"
    ```
+   `client_payload`는 linux-repo `publish` 실행의 **요청 기록**(Summary)에 그대로 남는다 — 누가(`repo` · `run_url`) 무엇을(`app` · `tag`) 요청했는지. 실행 이름에도 `app` · `tag`가 붙는다. 같은 실행의 **진행 기록**에서 단계별 결과와 버전 변화를 본다.
    ⚠️ 스텝 `if:`에서는 `secrets`를 읽을 수 없다(워크플로 전체가 문법 오류) — 그래서 토큰 유무는 셸에서 본다.
    `LINUX_REPO_DISPATCH_TOKEN` = `SosomLab/linux-repo`에 **Contents: Read and write**(fine-grained · dispatch에 필요) 권한만 준 토큰 · 앱 저장소 시크릿에 등록.
    토큰 확인(로컬): `read -rs T; curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Authorization: Bearer $T" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SosomLab/linux-repo/dispatches -d '{"event_type":"app-released"}'` → `204`면 정상(linux-repo의 publish가 한 번 돈다).

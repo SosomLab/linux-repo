@@ -5,11 +5,20 @@
 #   - 앱 릴리스가 끝났다는 신호(repository_dispatch · event_type: app-released) — 앱 저장소 release 워크플로가 보낸다
 #   - 하루 한 번(신호를 놓쳤을 때의 안전망 · 바뀐 버전이 없으면 배포를 건너뛴다)
 #
+# 기록(실행 화면 Summary):
+#   - 요청 기록 — 무엇이 실행을 일으켰나 · 외부 신호면 보낸 쪽이 실은 client_payload(app · tag · repo · run_url)
+#   - 진행 기록 — 단계별 결과 · 버전 변화(요청 시점 → 이번 생성) · 배포 여부
+#   실행 목록에서도 외부 요청이 구분되게 실행 이름에 요청 앱을 붙인다.
+#
 # 필요한 시크릿(Settings → Secrets and variables → Actions):
 #   LINUX_REPO_GPG_PRIVATE_KEY  서명 개인 키(armor 전문 · docs/KEYS.md)
 #   CLOUDFLARE_API_TOKEN        Pages 편집 권한 토큰(docs/SETUP.md 4단계)
 #   CLOUDFLARE_ACCOUNT_ID       Cloudflare 계정 ID
 name: publish
+run-name: >-
+  ${{ github.event_name == 'repository_dispatch'
+      && format('publish · 외부 요청 · {0} {1}', github.event.client_payload.app || '앱 미지정', github.event.client_payload.tag)
+      || format('publish · {0}', github.event_name) }}
 
 on:
   workflow_dispatch:
@@ -29,9 +38,42 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - name: 요청 기록
+        env:
+          EVENT: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          set -euo pipefail
+          curl -fsS https://pkg.sosomlab.com/repo.json -o "$RUNNER_TEMP/before.json" || echo '{}' > "$RUNNER_TEMP/before.json"
+          python3 - <<'EOF' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, os
+          from datetime import datetime, timedelta, timezone
+
+          def cell(v):
+              return str(v).replace("|", "\\|").replace("\n", " ")
+
+          event = os.environ["EVENT"]
+          kind = {"repository_dispatch": "외부 신호(repository_dispatch)", "workflow_dispatch": "수동 실행", "schedule": "정기 실행"}.get(event, event)
+          payload = json.loads(os.environ.get("PAYLOAD") or "null")
+          if payload is not None and not isinstance(payload, dict):
+              payload = {"payload": payload}
+          now = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d %H:%M:%S KST")
+          rows = [("종류", kind), ("실행 주체", os.environ["ACTOR"]), ("접수 시각", now)]
+          rows += [(f"요청 `{k}`", v) for k, v in (payload or {}).items()]
+          if event == "repository_dispatch" and not payload:
+              rows.append(("요청 내용", "client_payload 없음 — 보낸 쪽을 알 수 없다"))
+          print("## 요청 기록\n")
+          print("| 항목 | 값 |\n| --- | --- |")
+          for k, v in rows:
+              print(f"| {k} | {cell(v)} |")
+          print()
+          EOF
+
       - uses: actions/checkout@v4
 
       - name: 서명 키 가져오기
+        id: key
         env:
           KEY: ${{ secrets.LINUX_REPO_GPG_PRIVATE_KEY }}
         run: |
@@ -43,10 +85,12 @@ jobs:
           echo "서명 키: $fpr"
 
       - name: RPM 도구(등록 앱 중 [rpm]이 있을 때만)
+        id: rpm
         run: |
           if grep -qx '\[rpm\]' apps/*.toml; then sudo apt-get update -q && sudo apt-get install -y -q createrepo-c; fi
 
       - name: 저장소 생성
+        id: build
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/build_repo.py --out public
@@ -67,6 +111,7 @@ jobs:
           echo "배포 필요: $change"
 
       - name: Cloudflare Pages 배포
+        id: deploy
         if: steps.diff.outputs.change == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
@@ -75,9 +120,62 @@ jobs:
           command: pages deploy public --project-name=linux-repo --branch=main --commit-dirty=true
 
       - name: 배포 확인
+        id: verify
         if: steps.diff.outputs.change == 'true'
         run: |
           set -euo pipefail
           sleep 20
           curl -fsS https://pkg.sosomlab.com/repo.json
           curl -fsSI https://pkg.sosomlab.com/apt/dists/stable/InRelease | head -n 5
+
+      - name: 진행 기록
+        if: always()
+        env:
+          S_KEY: ${{ steps.key.outcome }}
+          S_RPM: ${{ steps.rpm.outcome }}
+          S_BUILD: ${{ steps.build.outcome }}
+          S_DIFF: ${{ steps.diff.outcome }}
+          S_DEPLOY: ${{ steps.deploy.outcome }}
+          S_VERIFY: ${{ steps.verify.outcome }}
+          CHANGE: ${{ steps.diff.outputs.change }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          python3 - <<'EOF' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, os
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          def versions(path):
+              try:
+                  return {a["package"]: a["version"] for a in json.loads(Path(path).read_text()).get("apps") or []}
+              except (OSError, ValueError, KeyError, TypeError):
+                  return None
+
+          mark = {"success": "✅ 성공", "failure": "❌ 실패", "skipped": "⏭️ 건너뜀", "cancelled": "🚫 취소"}
+          steps = [("서명 키 가져오기", "S_KEY"), ("RPM 도구", "S_RPM"), ("저장소 생성", "S_BUILD"),
+                   ("바뀐 것 판정", "S_DIFF"), ("Cloudflare Pages 배포", "S_DEPLOY"), ("배포 확인", "S_VERIFY")]
+          print("## 진행 기록\n")
+          print("| 단계 | 결과 |\n| --- | --- |")
+          for name, env in steps:
+              outcome = os.environ.get(env, "")
+              print(f"| {name} | {mark.get(outcome, outcome or '⏭️ 건너뜀')} |")
+          print()
+
+          before = versions(Path(os.environ["RUNNER_TEMP"]) / "before.json") or {}
+          after = versions("public/repo.json")
+          if after is None:
+              print("저장소가 생성되지 않았다 — 위 표에서 실패한 단계의 로그를 본다.")
+          else:
+              print("| 패키지 | 요청 시점 | 이번 생성 |\n| --- | --- | --- |")
+              for pkg in sorted(after):
+                  old = before.get(pkg, "(없음)")
+                  print(f"| {pkg} | {old} | {after[pkg]}{'' if old == after[pkg] else ' 🆕'} |")
+          print()
+          if os.environ.get("S_VERIFY") == "success":
+              print(f"배포 완료 — {os.environ.get('DEPLOY_URL') or 'https://pkg.sosomlab.com/'}")
+          elif os.environ.get("CHANGE") == "false":
+              print("바뀐 버전이 없어 배포를 건너뛰었다.")
+          else:
+              print("배포되지 않았다.")
+          print(f"\n종료 시각: {datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S KST')}")
+          EOF

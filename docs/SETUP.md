@@ -58,4 +58,7 @@
 
 - 앱 릴리스 끝에 발행 신호 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4. Nexa Clip은 그 저장소의 개발 세션이 `release.yml`에 넣는다 — ⏳ 남음.
 - [사용자] `LINUX_REPO_DISPATCH_TOKEN`(fine-grained · `SosomLab/linux-repo` Contents Read/write) 발급 → `SosomLab/nexa-clip` 시크릿에 등록 — ✅ 완료(10-05 · dispatch 204 · `repository_dispatch` publish 성공).
+- [세션] `publish` 실행 기록 — 실행 화면 Summary에 **요청 기록**(종류 · 실행 주체 · 접수 시각 · 신호의 `client_payload`)과 **진행 기록**(단계별 결과 · 버전 변화 · 배포 여부)을 남기고, 외부 요청은 실행 이름에 앱 · 태그를 붙인다 — ✅ 완료(10-05 · 로컬 모의 실행으로 출력 확인 · 실제 Actions 실행 확인은 다음 신호/수동 실행 때 ⏳).
+  - 보낸 쪽(저장소 · 실행 주소)까지 남으려면 신호가 `app` · `tag` · `repo` · `run_url`을 실어야 한다 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4 예시(갱신됨). Nexa Clip `release.yml`에 넣을 때 이 예시를 쓴다.
+  - 기록은 Actions 실행에 붙어 GitHub 보존 기간(기본 90일)까지만 남는다.
 - RPM: 앱 릴리스가 `.rpm`을 만들기 시작하면 `apps/<앱>.toml`의 `[rpm]`을 켠다(생성기 RPM 경로는 아직 실기 전).
