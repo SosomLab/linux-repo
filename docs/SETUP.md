@@ -61,4 +61,11 @@
 - [세션] `publish` 실행 기록 — 실행 화면 Summary에 **요청 기록**(종류 · 실행 주체 · 접수 시각 · 신호의 `client_payload`)과 **진행 기록**(단계별 결과 · 버전 변화 · 배포 여부)을 남기고, 외부 요청은 실행 이름에 앱 · 태그를 붙인다 — ✅ 완료(10-05 · 로컬 모의 실행으로 출력 확인 · 실제 Actions 실행 확인은 다음 신호/수동 실행 때 ⏳).
   - 보낸 쪽(저장소 · 실행 주소)까지 남으려면 신호가 `app` · `tag` · `repo` · `run_url`을 실어야 한다 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4 예시(갱신됨). Nexa Clip `release.yml`에 넣을 때 이 예시를 쓴다.
   - 기록은 Actions 실행에 붙어 GitHub 보존 기간(기본 90일)까지만 남는다.
-- RPM: 앱 릴리스가 `.rpm`을 만들기 시작하면 `apps/<앱>.toml`의 `[rpm]`을 켠다(생성기 RPM 경로는 아직 실기 전).
+
+## 8. RPM(dnf) — 진행 중
+
+- [세션] 생성기 · 사이트 준비 — ✅ 완료(10-05). `apps/nexa-clip.toml`의 `[rpm]`을 켰다.
+  - 릴리스에 `.rpm`이 없으면 생성기가 `::warning::`만 남기고 건너뛴다 — APT 발행은 그대로, 사이트의 dnf 안내(`<!--RPM-->` 블록)도 빠진다(v0.1.7 로컬 실행 + `test_apt_local.sh` 통과로 확인).
+  - `.rpm`이 생기면 다음 발행부터 `rpm/sosomlab.repo` · 서명된 `repodata` · 사이트 dnf 설치·제거 안내가 저절로 나타난다.
+- Nexa Clip 릴리스가 `nexa-clip-{version}-linux-x64.rpm`(`.rpm` 안 Name = `nexa-clip`)을 올린다 — 그 저장소의 개발 세션 몫 — ⏳ 남음.
+- 첫 `.rpm` 발행 뒤 Fedora/Rocky에서 `dnf install` 실기(createrepo_c 색인 · `repomd.xml.asc` 서명 · GitHub 302 내려받기) — ⏳ 남음(이 PC엔 createrepo_c · dnf가 없어 RPM 생성 경로는 아직 실행된 적 없다).

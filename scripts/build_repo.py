@@ -9,6 +9,8 @@
   (apt 3.x가 GitHub의 2단 리다이렉트를 끝까지 따라가는 것을 10-05 실측). 무결성은 서명된 색인의 해시가 지킨다.
 - 최신 정식 릴리스 하나만 싣는다(가장 단순 · Pages 배포는 사이트 전체 교체).
 - 외부 의존 없음(표준 라이브러리 + dpkg-deb · gpg · RPM이 있을 때만 createrepo_c).
+- `[deb]` 자산이 릴리스에 없으면 실패한다. `[rpm]` 자산은 없으면 경고만 하고 건너뛴다(앱이 .rpm을 아직 안 만들어도
+  APT 발행은 계속된다). RPM이 하나도 없으면 dnf 저장소 파일과 사이트의 RPM 안내(`<!--RPM-->…<!--/RPM-->`)를 빼고 낸다.
 - GITHUB_TOKEN 환경 변수가 있으면 API 호출에 쓴다(없으면 미인증 60회/시간).
 """
 
@@ -20,6 +22,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -183,6 +186,9 @@ class Build:
             if f.is_file():
                 text = f.read_text()
                 text = text.replace("{{FINGERPRINT}}", fpr).replace("{{PACKAGES}}", listing)
+                # RPM 안내 블록 — dnf 저장소가 실제로 생겼을 때만 남긴다(없는 .repo 주소를 안내하지 않게).
+                text = (text.replace("<!--RPM-->", "").replace("<!--/RPM-->", "") if self.rpm_assets
+                        else re.sub(r"<!--RPM-->.*?<!--/RPM-->", "", text, flags=re.S))
                 (out / f.name).write_text(text)
         static_redirects = (site / "_redirects").read_text() if (site / "_redirects").exists() else ""
         (out / "_redirects").write_text(static_redirects + "\n".join(self.redirects) + "\n")
@@ -214,6 +220,10 @@ def main() -> int:
             for kind in ("deb", "rpm"):
                 for arch, pattern in app.get(kind, {}).items():
                     name = pattern.format(version=version)
+                    if name not in assets and kind == "rpm":
+                        # Actions 경고 주석으로도 보이게(::warning::) — RPM 사용자는 이 버전을 못 받는다.
+                        print(f"::warning::{app['package']} {tag}: RPM 자산 {name} 이(가) 릴리스에 없어 건너뛴다", flush=True)
+                        continue
                     if name not in assets:
                         raise SystemExit(f"{app['package']} {tag}: 자산 {name} 이(가) 릴리스에 없다")
                     data = http_get(assets[name])

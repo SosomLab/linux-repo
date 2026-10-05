@@ -1,11 +1,18 @@
 # linux-repo — pkg.sosomlab.com
 
-SosomLab 앱의 **서명된 Linux 패키지 저장소**(APT · RPM 예정). 사용자는 저장소를 한 번 등록하면 `apt install` / `apt upgrade`로 SosomLab 앱을 설치·갱신한다.
+SosomLab 앱의 **서명된 Linux 패키지 저장소**(APT · RPM). 사용자는 저장소를 한 번 등록하면 `apt install` / `apt upgrade`(또는 `dnf`)로 SosomLab 앱을 설치·갱신한다.
 
 ```sh
 sudo curl -fsSLo /usr/share/keyrings/sosomlab-archive-keyring.gpg https://pkg.sosomlab.com/sosomlab-archive-keyring.gpg
 sudo curl -fsSLo /etc/apt/sources.list.d/sosomlab.sources https://pkg.sosomlab.com/apt/sosomlab.sources
 sudo apt update && sudo apt install nexa-clip
+```
+
+RPM(Fedora · RHEL 계열) — 앱 릴리스에 `.rpm`이 있을 때만 발행된다(없으면 생성기가 경고하고 건너뛰며, 사이트의 dnf 안내도 빠진다):
+
+```sh
+sudo curl -fsSLo /etc/yum.repos.d/sosomlab.repo https://pkg.sosomlab.com/rpm/sosomlab.repo
+sudo dnf install nexa-clip
 ```
 
 ## 구조
