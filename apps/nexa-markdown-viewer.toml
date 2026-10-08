@@ -1,0 +1,21 @@
+# Nexa Markdown Viewer — pkg.sosomlab.com 등록 파일(모양 = apps/nexa-clip.toml · 규칙 = docs/ADDING-AN-APP.md)
+#
+# 앱 쪽 발행 신호 = kiros33/sosomlab-nexa-viewer `.github/workflows/linux-repo.yml`
+#   (release.yml이 모든 OS 자산을 올린 뒤 호출 · 수동 실행도 가능 → app-released).
+# 자산 이름 = tauri-action(Tauri bundler) 산출 이름 — productName(NexaMarkdownViewer)을 바꾸면 이 규칙과
+# 그 워크플로의 자산 확인 줄을 함께 바꾼다.
+#
+# ⚠️ 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다 — 서명된 색인의 해시가 그 파일을 가리킨다.
+
+package = "nexa-markdown-viewer"            # apt/dnf 패키지 이름(.deb Package · .rpm Name과 같다 · v0.3.4 실측)
+github = "kiros33/sosomlab-nexa-viewer"     # 릴리스를 가져올 저장소
+tag_prefix = "v"                            # 태그 = v<버전>
+summary = "GitHub-style Markdown viewer"
+
+# 자산 이름 규칙 — {version}은 태그에서 tag_prefix를 뗀 값.
+[deb]
+amd64 = "NexaMarkdownViewer_{version}_amd64.deb"
+
+# RPM — Tauri bundler가 v0.3.x 릴리스부터 함께 만든다(Release 1).
+[rpm]
+x86_64 = "NexaMarkdownViewer-{version}-1.x86_64.rpm"
