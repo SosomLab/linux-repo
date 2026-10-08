@@ -1,0 +1,20 @@
+# Nexa Coffee — pkg.sosomlab.com 등록 파일(모양 = apps/nexa-clip.toml · 규칙 = docs/ADDING-AN-APP.md)
+#
+# 앱 쪽 포장·발행 신호 = SosomLab/nexa-coffee `.github/workflows/linux-packages.yml`
+#   (릴리스 tar.gz 안 musl 정적 바이너리를 .deb · .rpm으로 포장해 같은 릴리스에 덧붙인 뒤 app-released).
+# 자산 이름을 바꾸면 그 저장소의 packaging/linux/build-pkgs.sh 산출 이름도 함께 바꾼다.
+#
+# ⚠️ 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다 — 서명된 색인의 해시가 그 파일을 가리킨다.
+
+package = "nexa-coffee"            # apt/dnf 패키지 이름(.deb Package · .rpm Name과 같다)
+github = "SosomLab/nexa-coffee"    # 릴리스를 가져올 저장소
+tag_prefix = "v"                   # 태그 = v<버전>
+summary = "Tray timer that keeps the computer awake"
+
+# 자산 이름 규칙 — {version}은 태그에서 tag_prefix를 뗀 값(build-pkgs.sh 산출 이름 · nexa-sql과 같은 꼴).
+[deb]
+amd64 = "nexa-coffee_{version}_amd64.deb"
+
+# RPM — v0.1.0부터(linux-packages.yml이 기존 릴리스에 덧붙임 · Release 1).
+[rpm]
+x86_64 = "nexa-coffee-{version}-1.x86_64.rpm"
