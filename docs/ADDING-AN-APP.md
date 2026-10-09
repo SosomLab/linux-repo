@@ -41,3 +41,19 @@
    토큰 확인(로컬): `read -rs T; curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Authorization: Bearer $T" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SosomLab/linux-repo/dispatches -d '{"event_type":"app-released"}'` → `204`면 정상(linux-repo의 publish가 한 번 돈다).
    신호가 없어도 하루 한 번 정기 실행이 최신 릴리스를 잡는다.
 5. 사이트 `https://pkg.sosomlab.com/`의 패키지 표에 새 앱이 보이면 끝. 사용자는 저장소를 이미 등록했다면 `sudo apt install <패키지 이름>`만 하면 된다.
+
+## 등록 누락 방지 — 양쪽에서 잡는다(10-09)
+
+> 사고: nexa-beep은 v0.2.x부터 `.deb`를 릴리스하고 있었지만 여기 등록이 빠졌다. 사용자가 저장소를 등록하고
+> `sudo apt install nexa-beep`을 해도 apt는 로컬 .deb로 깔린 옛 버전을 "이미 최신"으로 보고 **아무 말 없이 끝난다**
+> (저장소에 그 이름이 없으니 후보가 없다). 조용히 실패하는 모양이라 사람이 알아채기 어렵다.
+
+- **저장소 쪽(여기)**: `publish`의 **미등록 앱 점검**(`scripts/check_unregistered.py`) — 조직 공개 저장소를 훑어 최신 정식 릴리스에 `.deb`/`.rpm`이 있는데 `apps/*.toml`에 없는 앱을 `::warning::`과 실행 요약 표로 알린다(매 발행 · 정기 실행 포함). 로컬 확인: `GITHUB_TOKEN=$(gh auth token) python3 scripts/check_unregistered.py` (`--strict`면 종료 1).
+- **앱 쪽**: release 워크플로의 `linux-repo` 잡 **첫 단계에서 등록 파일 존재를 확인**하고 없으면 `::error::`로 그 잡을 실패시킨다(릴리스 공개는 그대로 · 빨간 잡으로 드러난다):
+  ```yaml
+        - name: 등록 확인(linux-repo apps/<패키지 이름>.toml)
+          run: |
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/SosomLab/linux-repo/main/apps/<패키지 이름>.toml)
+            [ "$code" = 200 ] || { echo "::error::pkg.sosomlab.com에 <패키지 이름>이 등록되지 않았다(HTTP $code) — SosomLab/linux-repo apps/<패키지 이름>.toml 추가(docs/ADDING-AN-APP.md)"; exit 1; }
+  ```
+- **설치 자리 덮어쓰기 금지**: 개발 PC에서 설치본을 로컬 빌드로 덮어쓰는 스크립트(`install-local.sh` 류)는 dpkg 기록과 실제 파일을 어긋나게 한다(`dpkg -V`로만 드러남). Linux에서는 **`.deb`로 다시 포장해 `dpkg -i`** 하는 쪽으로 맞춘다(nexa-beep `tools/install-local.sh` 10-09).

@@ -19,7 +19,7 @@ sudo dnf install nexa-clip
 
 | 경로 | 무엇 |
 |---|---|
-| `apps/*.toml` | **앱 등록**(파일 하나 = 앱 하나) — [docs/ADDING-AN-APP.md](docs/ADDING-AN-APP.md) |
+| `apps/*.toml` | **앱 등록**(파일 하나 = 앱 하나) — [docs/ADDING-AN-APP.md](docs/ADDING-AN-APP.md) · 누락은 `publish`의 **미등록 앱 점검**(`scripts/check_unregistered.py`)이 경고한다 |
 | `scripts/build_repo.py` | 등록 앱의 최신 GitHub Release로 색인 생성 · GPG 서명 · `_redirects` 생성 → `public/` |
 | `scripts/test_apt_local.sh` · `serve_local.py` | 배포 전 로컬 검증(root 없이 apt가 서명 검증 + 리다이렉트로 받는지) |
 | `site/` | 사이트 정적 파일(`index.html` 설치 안내 · `404.html` 없는 경로는 진짜 404 · `_headers` 캐시 금지 · `_redirects` 머리) |

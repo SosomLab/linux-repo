@@ -72,6 +72,13 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # ★ 미등록 앱 탐지(10-09 — nexa-beep이 .deb를 릴리스하면서 여기 등록이 빠져 `apt install`이 옛 버전에 머문 사고):
+      #   조직 공개 저장소의 최신 릴리스에 .deb/.rpm이 있는데 apps/*.toml에 없으면 ::warning:: + 요약 표. 발행은 막지 않는다.
+      - name: 미등록 앱 점검
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_unregistered.py
+
       - name: 서명 키 가져오기
         id: key
         env:
