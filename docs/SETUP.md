@@ -81,7 +81,7 @@
 | `nexa-dir` | SosomLab/nexa-dir3 | 0.30.2 | 10-05 |
 | `nexa-coffee` | SosomLab/nexa-coffee | 0.1.5 | 10-09 |
 | `nexa-markdown-viewer` | kiros33/sosomlab-nexa-viewer | 0.4.0 | 10-09 |
-| `nexa-beep` | SosomLab/nexa-beep | 0.10.0 | 10-09 |
+| `nexa-beep` | SosomLab/nexa-beep | 0.10.1 | 10-09 |
 
 - [세션] 미등록 앱 점검 — `publish`가 조직 공개 저장소 중 `.deb`/`.rpm`을 릴리스하면서 `apps/*.toml`에 없는 앱을 `::warning::`과 Summary로 알린다(`scripts/check_unregistered.py`) — ✅ 10-09(11-08 실행: 공개 저장소 13개 중 미등록 없음).
 
@@ -97,4 +97,4 @@
 
 - 탑재 방식 근거: 등록 앱 패키지가 모두 Pages 파일 한도(25 MiB)보다 작다(가장 큰 nexa-sql `.deb` 14.5 MB). CI가 색인 해시를 내려고 이미 받는 파일이라 추가 다운로드가 없다. 사용자 설치가 GitHub 다운로드 CDN 상태와 무관해진다.
 - 재발 확인: `publish` Summary의 **배포 확인**이 첫 `.deb`를 pkg.sosomlab.com에서 끝까지 받아 본다.
-- ⏳ 남음: 탑재 방식 첫 배포(수동 `publish` 실행) → 실도메인에서 `apt-get download nexa-clip` · `.rpm` 내려받기 200 확인.
+- 탑재 방식 첫 배포 — ✅ 11-08 19:29 KST · run [42471586022](https://github.com/SosomLab/linux-repo/actions/runs/42471586022)(`4e36ccf` · 실은 패키지 12 · 리다이렉트 0). 실도메인에서 `.deb` 6개 전부 200 · nexa-clip 0.2.8 `.deb` SHA256이 서명 색인과 일치 · `.rpm` 200. 같은 실행에서 nexa-beep 0.10.1도 발행.
