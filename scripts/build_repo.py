@@ -71,6 +71,37 @@ def http_get(url: str, accept: str | None = None, attempts: int = 4) -> bytes:
     raise RuntimeError("unreachable")
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401 — 표준 서명
+        return None
+
+
+def download_asset(api_url: str, browser_url: str, name: str) -> bytes:
+    """릴리스 자산 바이트 — **API 자산 경로 우선**(2026-11-08: `browser_download_url`이 CDN 504를 연속으로 내는 동안
+    `api.github.com/.../assets/<id>` + `Accept: application/octet-stream`은 정상이었다). API는 서명된 objects URL로 302를
+    주므로 **리다이렉트를 손으로 따라가** 토큰이 다른 호스트로 새지 않게 한다(urllib 기본 핸들러는 헤더를 그대로 넘긴다).
+    실패하면 종전 browser URL(재시도 포함)로 폴백."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        try:
+            req = urllib.request.Request(api_url, headers={
+                "User-Agent": "sosomlab-linux-repo",
+                "Accept": "application/octet-stream",
+                "Authorization": f"Bearer {token}",
+            })
+            opener = urllib.request.build_opener(_NoRedirect)
+            try:
+                with opener.open(req, timeout=120) as r:
+                    return r.read()  # 302 없이 본문을 준 경우
+            except urllib.error.HTTPError as e:
+                if e.code in (301, 302, 303, 307, 308) and e.headers.get("Location"):
+                    return http_get(e.headers["Location"])
+                raise
+        except Exception as e:  # noqa: BLE001 — 폴백 전 경고만
+            print(f"::warning::{name}: API 자산 경로 실패({e}) — browser URL로 폴백", flush=True)
+    return http_get(browser_url)
+
+
 def latest_release(repo: str, tag_prefix: str = "v") -> dict:
     """**앱** 최신 정식 릴리스(초안·사전 배포 제외) — 태그가 `tag_prefix`+숫자로 시작하는 것만.
 
@@ -248,6 +279,7 @@ def main() -> int:
             tag = rel["tag_name"]
             version = tag.removeprefix(app.get("tag_prefix", "v"))
             assets = {x["name"]: x["browser_download_url"] for x in rel["assets"]}
+            api_urls = {x["name"]: x["url"] for x in rel["assets"]}
             log(f"{app['package']}: {tag}")
             for kind in ("deb", "rpm"):
                 for arch, pattern in app.get(kind, {}).items():
@@ -258,7 +290,7 @@ def main() -> int:
                         continue
                     if name not in assets:
                         raise SystemExit(f"{app['package']} {tag}: 자산 {name} 이(가) 릴리스에 없다")
-                    data = http_get(assets[name])
+                    data = download_asset(api_urls[name], assets[name], name)
                     log(f"  {kind} {arch}: {name} ({len(data)} B)")
                     (b.add_deb(app["package"], arch, name, assets[name], data, tmp) if kind == "deb"
                      else b.add_rpm(arch, name, assets[name], data, tmp))
