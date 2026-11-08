@@ -52,9 +52,22 @@ def http_get(url: str, accept: str | None = None) -> bytes:
         return r.read()
 
 
-def latest_release(repo: str) -> dict:
-    """최신 정식 릴리스(초안·사전 배포 제외)."""
-    return json.loads(http_get(f"https://api.github.com/repos/{repo}/releases/latest", "application/vnd.github+json"))
+def latest_release(repo: str, tag_prefix: str = "v") -> dict:
+    """**앱** 최신 정식 릴리스(초안·사전 배포 제외) — 태그가 `tag_prefix`+숫자로 시작하는 것만.
+
+    GitHub의 `releases/latest`는 저장소 전체에서 하나만 가리키므로, 한 저장소가 다른 산출물도 릴리스하면
+    (nexa-beep의 서버 `beepd-v*` · 2026-11-08 beepd-v1.0.0이 latest가 돼 앱 .deb를 못 찾고 저장소 전체 생성이
+    멈춤) 엉뚱한 것을 집는다. 목록(최신순)에서 접두사로 골라 그 함정을 피한다.
+    """
+    url = f"https://api.github.com/repos/{repo}/releases?per_page=30"
+    for rel in json.loads(http_get(url, "application/vnd.github+json")):
+        if rel.get("draft") or rel.get("prerelease"):
+            continue
+        tag = rel.get("tag_name", "")
+        rest = tag.removeprefix(tag_prefix)
+        if tag.startswith(tag_prefix) and rest[:1].isdigit():
+            return rel
+    raise SystemExit(f"{repo}: 태그 {tag_prefix}<버전> 꼴의 정식 릴리스가 없다")
 
 
 def hashes(data: bytes) -> dict[str, str]:
@@ -212,7 +225,7 @@ def main() -> int:
         tmp = Path(t)
         for app_file in sorted(a.apps.glob("*.toml")):
             app = tomllib.loads(app_file.read_text())
-            rel = latest_release(app["github"])
+            rel = latest_release(app["github"], app.get("tag_prefix", "v"))
             tag = rel["tag_name"]
             version = tag.removeprefix(app.get("tag_prefix", "v"))
             assets = {x["name"]: x["browser_download_url"] for x in rel["assets"]}
