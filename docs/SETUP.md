@@ -94,7 +94,9 @@
 | 16:32 | nexa-clip v0.2.7 신호 실행 [42459212122](https://github.com/SosomLab/linux-repo/actions/runs/42459212122) 실패 — nexa-beep 저장소의 서버 릴리스 `beepd-v1.0.0`이 `releases/latest`가 돼 앱 `.deb`를 못 찾음(저장소 전체 생성이 멈춤) | `17383bf` — 앱 릴리스를 `tag_prefix`+숫자 태그로 골라냄 |
 | 18:07 ~ 18:25 | nexa-beep v0.10.0 · nexa-clip v0.2.8 신호 실행과 수동 실행 연속 실패 — 자산 다운로드(`browser_download_url`) HTTP 504 | `675e2c1` 5xx·타임아웃 재시도(4회) → 그래도 504 → `92dd82a` GitHub API 자산 경로 우선(browser URL은 폴백) · 수동 실행 [42467176929](https://github.com/SosomLab/linux-repo/actions/runs/42467176929) 성공 — 색인에 nexa-clip 0.2.8 · nexa-beep 0.10.0 반영 |
 | 18:30 | 색인은 정상이지만 **사용자 내려받기 실패** — `/apt/pool/…` 302가 가리키는 `github.com/…/releases/download/…`가 한국 edge(koreacentral)에서 **모든 자산 504**(nexa-clip 0.2.6~0.2.8 · nexa-beep · nexa-dir · nexa-sql · SHA256SUMS). API 자산 경로는 200 · githubstatus는 "All Systems Operational" | 패키지 파일을 **사이트에 직접 탑재**(25 MiB 넘는 파일만 302 · `e9c3ca6`) — 근거는 아래 · 다음 `publish` 실행부터 적용 |
+| 18:39 | nexa-beep v0.10.1 신호 실행 [42468108324](https://github.com/SosomLab/linux-repo/actions/runs/42468108324) 성공(`92dd82a` API 경로 — 색인만 갱신 · 사용자 내려받기는 아직 302 → 504) | — |
 
 - 탑재 방식 근거: 등록 앱 패키지가 모두 Pages 파일 한도(25 MiB)보다 작다(가장 큰 nexa-sql `.deb` 14.5 MB). CI가 색인 해시를 내려고 이미 받는 파일이라 추가 다운로드가 없다. 사용자 설치가 GitHub 다운로드 CDN 상태와 무관해진다.
 - 재발 확인: `publish` Summary의 **배포 확인**이 첫 `.deb`를 pkg.sosomlab.com에서 끝까지 받아 본다.
 - 탑재 방식 첫 배포 — ✅ 11-08 19:29 KST · run [42471586022](https://github.com/SosomLab/linux-repo/actions/runs/42471586022)(`4e36ccf` · 실은 패키지 12 · 리다이렉트 0). 실도메인에서 `.deb` 6개 전부 200 · nexa-clip 0.2.8 `.deb` SHA256이 서명 색인과 일치 · `.rpm` 200. 같은 실행에서 nexa-beep 0.10.1도 발행.
+- 정기 실행 판정 — ✅ 11-08 19:30 KST run [42471702467](https://github.com/SosomLab/linux-repo/actions/runs/42471702467)(탑재 방식으로 생성 · 실은 패키지 12 · 버전 변화 없음 → `배포 필요: false`로 배포 건너뜀).

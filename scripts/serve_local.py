@@ -2,7 +2,8 @@
 """로컬 시험용 서버 — public/을 서빙하고 `_redirects`(정확 일치 줄만)를 Cloudflare Pages처럼 흉내 낸다.
 
 사용: python3 scripts/serve_local.py [public] [포트=18574]
-배포 전에 apt가 서명 검증·리다이렉트를 끝까지 통과하는지 확인하는 용도(scripts/test_apt_local.sh).
+배포 전에 apt가 서명 검증·패키지 내려받기를 끝까지 통과하는지 확인하는 용도(scripts/test_apt_local.sh).
+패키지는 public/에 실려 있다(2026-11-08~) — `_redirects`는 Pages 한도(25 MiB)를 넘은 파일에만 생긴다.
 """
 
 import http.server
