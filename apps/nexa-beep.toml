@@ -1,7 +1,7 @@
 # Nexa Beep — pkg.sosomlab.com 등록 파일(apps/nexa-clip.toml과 같은 모양 · docs/ADDING-AN-APP.md)
 #
 # 저장소 생성기(scripts/build_repo.py)는 SosomLab/nexa-beep의 최신 정식 릴리스에서 아래 자산을 찾아
-# 색인을 만들고, 패키지 파일 자체는 GitHub Release로 302 리다이렉트한다.
+# 색인을 만들고, 패키지 파일은 받아서 사이트에 함께 싣는다(2026-11-08~).
 # ⚠️ 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다 — 서명된 색인의 해시가 그 파일을 가리킨다.
 
 package = "nexa-beep"            # apt/dnf 패키지 이름(.deb Package · .rpm Name과 같다)

@@ -134,6 +134,9 @@ jobs:
           sleep 20
           curl -fsS https://pkg.sosomlab.com/repo.json
           curl -fsSI https://pkg.sosomlab.com/apt/dists/stable/InRelease | head -n 5
+          # 패키지 파일이 사이트에서 직접 내려오는지(11-08~ 탑재 방식) — 첫 .deb 하나를 끝까지 받아 크기 확인.
+          pool=$(grep -m1 '^Filename: ' public/apt/dists/stable/main/binary-amd64/Packages | cut -d' ' -f2)
+          curl -fsSL -o /dev/null -w "패키지 $pool: %{http_code} %{size_download} B\n" "https://pkg.sosomlab.com/apt/$pool"
 
       - name: 진행 기록
         if: always()

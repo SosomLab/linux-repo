@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 배포 전 로컬 검증 — root 권한 없이 apt가 public/ 저장소를 **서명 검증 + 리다이렉트**로 끝까지 받는지 본다.
+# 배포 전 로컬 검증 — root 권한 없이 apt가 public/ 저장소를 **서명 검증 + 패키지 내려받기**(사이트 탑재 · 한도 초과분은 리다이렉트)까지 끝까지 받는지 본다.
 #   bash scripts/test_apt_local.sh [public] [패키지=nexa-clip]
 # 시스템 apt 상태·키링은 건드리지 않는다(모든 Dir를 임시 폴더로 돌린다). 설치는 하지 않고 내려받기까지만.
 set -euo pipefail
@@ -23,4 +23,4 @@ apt-get "${O[@]}" update
 ls -l "$W/get"
 sha256sum "$W/get/"*.deb
 grep -E '^(GET|"GET)|" 30[12] ' "$W/srv.log" | tail -n 8 || true
-echo "OK — 서명 검증 + 리다이렉트 내려받기 통과"
+echo "OK — 서명 검증 + 패키지 내려받기 통과"
