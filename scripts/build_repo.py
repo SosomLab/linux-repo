@@ -26,8 +26,10 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import tempfile
 import tomllib
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -41,15 +43,32 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def http_get(url: str, accept: str | None = None) -> bytes:
+def http_get(url: str, accept: str | None = None, attempts: int = 4) -> bytes:
+    """GET + **일시 오류 재시도**(5xx · 타임아웃 · 연결 오류 — 2/5/10초 백오프 · 2026-11-08 GitHub 자산 CDN 504 연속 2회에서 추가).
+
+    4xx(404 등)는 즉시 실패 — 자산 이름 오류를 재시도로 가리지 않는다. 마지막 시도의 예외를 그대로 올린다.
+    """
     req = urllib.request.Request(url, headers={"User-Agent": "sosomlab-linux-repo"})
     if accept:
         req.add_header("Accept", accept)
     token = os.environ.get("GITHUB_TOKEN")
     if token and url.startswith("https://api.github.com/"):
         req.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return r.read()
+    delays = [2, 5, 10]
+    for i in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code < 500 or i == attempts - 1:
+                raise
+            print(f"::warning::{url}: HTTP {e.code} — {delays[min(i, len(delays) - 1)]}초 뒤 재시도({i + 1}/{attempts - 1})", flush=True)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            if i == attempts - 1:
+                raise
+            print(f"::warning::{url}: {e} — {delays[min(i, len(delays) - 1)]}초 뒤 재시도({i + 1}/{attempts - 1})", flush=True)
+        time.sleep(delays[min(i, len(delays) - 1)])
+    raise RuntimeError("unreachable")
 
 
 def latest_release(repo: str, tag_prefix: str = "v") -> dict:
