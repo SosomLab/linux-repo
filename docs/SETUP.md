@@ -41,7 +41,7 @@
 
 1. [세션] 커밋 → [사용자 승인] push(`main`).
 2. [사용자 또는 세션(gh)] Actions → `publish` → **Run workflow**.
-3. [세션] 확인: `https://pkg.sosomlab.com/` 안내 화면 · `repo.json` · `apt/dists/stable/InRelease` · 리다이렉트(`/apt/pool/…` → GitHub 302).
+3. [세션] 확인: `https://pkg.sosomlab.com/` 안내 화면 · `repo.json` · `apt/dists/stable/InRelease` · 패키지 내려받기(`/apt/pool/…` — 11-08부터 사이트가 직접 서빙 · 그 전엔 GitHub 302 · §10).
 
 ## 6. 설치 시험 — ✅ 완료(10-05 · 이 VM에 0.1.7 설치 · `apt-cache policy` 출처 = pkg.sosomlab.com)
 
@@ -62,12 +62,39 @@
   - 보낸 쪽(저장소 · 실행 주소)까지 남으려면 신호가 `app` · `tag` · `repo` · `run_url`을 실어야 한다 → [ADDING-AN-APP.md](ADDING-AN-APP.md) §4 예시(갱신됨). Nexa Clip `release.yml`에 넣을 때 이 예시를 쓴다.
   - 기록은 Actions 실행에 붙어 GitHub 보존 기간(기본 90일)까지만 남는다.
 
-## 8. RPM(dnf) — 진행 중
+## 8. RPM(dnf) — 발행 중 · dnf 실기만 남음
 
 - [세션] 생성기 · 사이트 준비 — ✅ 완료(10-05 · `e2a9ba6`). `apps/nexa-clip.toml`의 `[rpm]`을 켰다.
-  - CI에서 새 경로(`[rpm]` 있음 → createrepo-c 설치 · `.rpm` 없음 경고)가 도는 것은 아직 못 봤다 — v0.1.8 실행은 그 이전 커밋(`389fa3c`)으로 돌았다. 다음 정기/수동 실행 Summary에서 확인 — ⏳.
+  - CI의 RPM 경로(createrepo-c 설치 → `createrepo_c` 색인 → `repomd.xml.asc` 서명) — ✅ 동작 확인(11-08 · run [42467176929](https://github.com/SosomLab/linux-repo/actions/runs/42467176929) · `rpm/x86_64/repodata/repomd.xml` 200 · 색인에 등록 앱 6개 전부).
   - 릴리스에 `.rpm`이 없으면 생성기가 `::warning::`만 남기고 건너뛴다 — APT 발행은 그대로, 사이트의 dnf 안내(`<!--RPM-->` 블록)도 빠진다(v0.1.7 로컬 실행 + `test_apt_local.sh` 통과로 확인).
   - `.rpm`이 생기면 다음 발행부터 `rpm/sosomlab.repo` · 서명된 `repodata` · 사이트 dnf 설치·제거 안내가 저절로 나타난다.
 - [세션] 사이트 `404.html` 추가 — ✅ 10-05. 없으면 Pages가 없는 경로에 200 + `index.html`을 준다(실측: `/rpm/sosomlab.repo` → HTML) → `.rpm` 발행 전에 dnf 안내를 따라 하면 HTML이 `/etc/yum.repos.d`에 저장된다. 이제 진짜 404 — 다음 배포부터.
-- Nexa Clip 릴리스(v0.1.8 현재 `.rpm` 없음)가 `nexa-clip-{version}-linux-x64.rpm`(`.rpm` 안 Name = `nexa-clip`)을 올린다 — 그 저장소의 개발 세션 몫 — ⏳ 남음.
-- 첫 `.rpm` 발행 뒤 Fedora/Rocky에서 `dnf install` 실기(createrepo_c 색인 · `repomd.xml.asc` 서명 · GitHub 302 내려받기) — ⏳ 남음(이 PC엔 createrepo_c · dnf가 없어 RPM 생성 경로는 아직 실행된 적 없다).
+- 앱 릴리스의 `.rpm` — ✅ 등록 앱 6개 모두 올린다(Nexa Clip은 `nexa-clip-{version}-linux-x64.rpm`).
+- Fedora/Rocky에서 `dnf install` 실기(createrepo_c 색인 · `repomd.xml.asc` 서명 · 패키지 내려받기) — ⏳ 남음(이 PC엔 dnf가 없다).
+
+## 9. 등록 앱 — 6개(11-08 현재 · `repo.json` 기준)
+
+| 패키지 | 저장소 | 발행 버전 | 등록 |
+|---|---|---|---|
+| `nexa-clip` | SosomLab/nexa-clip | 0.2.8 | 10-05 |
+| `nexa-sql` | SosomLab/nexa-sql | 0.7.0 | 10-05 |
+| `nexa-dir` | SosomLab/nexa-dir3 | 0.30.2 | 10-05 |
+| `nexa-coffee` | SosomLab/nexa-coffee | 0.1.5 | 10-09 |
+| `nexa-markdown-viewer` | kiros33/sosomlab-nexa-viewer | 0.4.0 | 10-09 |
+| `nexa-beep` | SosomLab/nexa-beep | 0.10.0 | 10-09 |
+
+- [세션] 미등록 앱 점검 — `publish`가 조직 공개 저장소 중 `.deb`/`.rpm`을 릴리스하면서 `apps/*.toml`에 없는 앱을 `::warning::`과 Summary로 알린다(`scripts/check_unregistered.py`) — ✅ 10-09(11-08 실행: 공개 저장소 13개 중 미등록 없음).
+
+## 10. 운영 이슈 · 조치
+
+### 11-08 — 앱 발행 신호 실행 연속 실패 · 사용자 설치 504
+
+| 시각(KST) | 일 | 조치 |
+|---|---|---|
+| 16:32 | nexa-clip v0.2.7 신호 실행 [42459212122](https://github.com/SosomLab/linux-repo/actions/runs/42459212122) 실패 — nexa-beep 저장소의 서버 릴리스 `beepd-v1.0.0`이 `releases/latest`가 돼 앱 `.deb`를 못 찾음(저장소 전체 생성이 멈춤) | `17383bf` — 앱 릴리스를 `tag_prefix`+숫자 태그로 골라냄 |
+| 18:07 ~ 18:25 | nexa-beep v0.10.0 · nexa-clip v0.2.8 신호 실행과 수동 실행 연속 실패 — 자산 다운로드(`browser_download_url`) HTTP 504 | `675e2c1` 5xx·타임아웃 재시도(4회) → 그래도 504 → `92dd82a` GitHub API 자산 경로 우선(browser URL은 폴백) · 수동 실행 [42467176929](https://github.com/SosomLab/linux-repo/actions/runs/42467176929) 성공 — 색인에 nexa-clip 0.2.8 · nexa-beep 0.10.0 반영 |
+| 18:30 | 색인은 정상이지만 **사용자 내려받기 실패** — `/apt/pool/…` 302가 가리키는 `github.com/…/releases/download/…`가 한국 edge(koreacentral)에서 **모든 자산 504**(nexa-clip 0.2.6~0.2.8 · nexa-beep · nexa-dir · nexa-sql · SHA256SUMS). API 자산 경로는 200 · githubstatus는 "All Systems Operational" | 패키지 파일을 **사이트에 직접 탑재**(25 MiB 넘는 파일만 302 · `e9c3ca6`) — 근거는 아래 · 다음 `publish` 실행부터 적용 |
+
+- 탑재 방식 근거: 등록 앱 패키지가 모두 Pages 파일 한도(25 MiB)보다 작다(가장 큰 nexa-sql `.deb` 14.5 MB). CI가 색인 해시를 내려고 이미 받는 파일이라 추가 다운로드가 없다. 사용자 설치가 GitHub 다운로드 CDN 상태와 무관해진다.
+- 재발 확인: `publish` Summary의 **배포 확인**이 첫 `.deb`를 pkg.sosomlab.com에서 끝까지 받아 본다.
+- ⏳ 남음: 탑재 방식 첫 배포(수동 `publish` 실행) → 실도메인에서 `apt-get download nexa-clip` · `.rpm` 내려받기 200 확인.
