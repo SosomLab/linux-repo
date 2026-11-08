@@ -5,8 +5,10 @@
     python3 scripts/build_repo.py --key <서명 키 지문> [--out public] [--apps apps] [--site site]
 
 - 앱 목록 = apps/*.toml(파일 하나 = 앱 하나 · 형식은 apps/nexa-clip.toml 주석).
-- 패키지 파일은 싣지 않는다. 색인의 Filename/href 경로를 `_redirects`가 GitHub Release 자산으로 302 보낸다
-  (apt 3.x가 GitHub의 2단 리다이렉트를 끝까지 따라가는 것을 10-05 실측). 무결성은 서명된 색인의 해시가 지킨다.
+- 패키지 파일을 **사이트에 함께 싣는다**(색인의 Filename/href 경로 그대로 — 2026-11-08~). 그 전에는 `_redirects`로
+  GitHub Release 자산에 302 보냈는데, 11-08 GitHub `releases/download`가 한국 edge에서 모든 자산에 504를 내 사용자
+  apt/dnf 설치가 막혔다(색인 생성은 API 자산 경로로 우회했지만 사용자 내려받기는 우회할 수 없음). 이제 GitHub CDN 장애와 무관.
+  Cloudflare Pages 파일 한도(25 MiB)를 넘는 파일만 예전처럼 302로 보낸다(::warning::). 무결성은 서명된 색인의 해시가 지킨다.
 - 최신 정식 릴리스 하나만 싣는다(가장 단순 · Pages 배포는 사이트 전체 교체).
 - 외부 의존 없음(표준 라이브러리 + dpkg-deb · gpg · RPM이 있을 때만 createrepo_c).
 - `[deb]` 자산이 릴리스에 없으면 실패한다. `[rpm]` 자산은 없으면 경고만 하고 건너뛴다(앱이 .rpm을 아직 안 만들어도
@@ -37,6 +39,7 @@ SUITE = "stable"
 COMPONENT = "main"
 ORIGIN = "SosomLab"
 KEYRING_NAME = "sosomlab-archive-keyring"
+PAGES_FILE_LIMIT = 25 * 1024 * 1024  # Cloudflare Pages 파일 하나 최대 크기 — 넘으면 GitHub Release로 302
 
 
 def log(msg: str) -> None:
@@ -146,6 +149,18 @@ class Build:
         self.packages: dict[str, list[str]] = {}  # arch -> Packages 문단들
         self.rpm_assets: dict[str, list[tuple[str, str, Path]]] = {}  # arch -> (자산 이름, URL, 임시 파일)
         self.manifest: list[dict] = []
+        self.hosted = 0  # 사이트에 실은 패키지 파일 수
+
+    def place(self, rel: str, url: str, data: bytes) -> None:
+        """패키지 파일을 사이트 경로 `rel`에 싣는다 — Pages 한도를 넘으면 GitHub Release로 302(예전 방식)."""
+        if len(data) < PAGES_FILE_LIMIT:
+            f = self.out / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(data)
+            self.hosted += 1
+        else:
+            print(f"::warning::{rel}: {len(data)} B — Pages 한도(25 MiB) 초과라 GitHub Release로 302", flush=True)
+            self.redirects.append(f"/{rel} {url} 302")
 
     # ── APT ────────────────────────────────────────────────────────────
     def add_deb(self, pkg: str, arch: str, asset_name: str, url: str, data: bytes, tmp: Path) -> None:
@@ -159,7 +174,7 @@ class Build:
             f"MD5sum: {h['MD5sum']}\nSHA1: {h['SHA1']}\nSHA256: {h['SHA256']}"
         )
         self.packages.setdefault(arch, []).append(stanza)
-        self.redirects.append(f"/apt/{rel} {url} 302")
+        self.place(f"apt/{rel}", url, data)
 
     def write_apt(self) -> None:
         dist = self.out / "apt" / "dists" / SUITE
@@ -198,7 +213,7 @@ class Build:
         f = d / asset_name
         f.write_bytes(data)
         self.rpm_assets.setdefault(arch, []).append((asset_name, url, f))
-        self.redirects.append(f"/rpm/{arch}/Packages/{asset_name} {url} 302")
+        self.place(f"rpm/{arch}/Packages/{asset_name}", url, data)
 
     def write_rpm(self, tmp: Path) -> None:
         for arch, items in sorted(self.rpm_assets.items()):
@@ -208,7 +223,7 @@ class Build:
             dst.mkdir(parents=True, exist_ok=True)
             shutil.copytree(src / "repodata", dst / "repodata", dirs_exist_ok=True)
             repomd = dst / "repodata" / "repomd.xml"
-            # 패키지 파일은 GitHub 자산 그대로라 RPM 자체 서명은 없다 → repo_gpgcheck(메타데이터 서명)로 무결성을 지킨다.
+            # 패키지 파일은 앱 릴리스 자산 그대로라 RPM 자체 서명은 없다 → repo_gpgcheck(메타데이터 서명)로 무결성을 지킨다.
             gpg(["--armor", "--detach-sign", "--output", str(repomd) + ".asc", str(repomd)], self.key)
 
     # ── 공통 산출물 ─────────────────────────────────────────────────────
@@ -303,7 +318,7 @@ def main() -> int:
         if b.rpm_assets:
             b.write_rpm(tmp)
     b.write_common(a.site)
-    log(f"완료 → {a.out}/ (앱 {len(b.manifest)} · 리다이렉트 {len(b.redirects)})")
+    log(f"완료 → {a.out}/ (앱 {len(b.manifest)} · 실은 패키지 {b.hosted} · 리다이렉트 {len(b.redirects)})")
     return 0
 
 

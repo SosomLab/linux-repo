@@ -20,8 +20,8 @@ sudo dnf install nexa-clip
 | 경로 | 무엇 |
 |---|---|
 | `apps/*.toml` | **앱 등록**(파일 하나 = 앱 하나) — [docs/ADDING-AN-APP.md](docs/ADDING-AN-APP.md) · 누락은 `publish`의 **미등록 앱 점검**(`scripts/check_unregistered.py`)이 경고한다 |
-| `scripts/build_repo.py` | 등록 앱의 최신 GitHub Release로 색인 생성 · GPG 서명 · `_redirects` 생성 → `public/` |
-| `scripts/test_apt_local.sh` · `serve_local.py` | 배포 전 로컬 검증(root 없이 apt가 서명 검증 + 리다이렉트로 받는지) |
+| `scripts/build_repo.py` | 등록 앱의 최신 GitHub Release로 색인 생성 · GPG 서명 · 패키지 파일 탑재 → `public/` |
+| `scripts/test_apt_local.sh` · `serve_local.py` | 배포 전 로컬 검증(root 없이 apt가 서명 검증 + 패키지 내려받기까지 통과하는지) |
 | `site/` | 사이트 정적 파일(`index.html` 설치 안내 · `404.html` 없는 경로는 진짜 404 · `_headers` 캐시 금지 · `_redirects` 머리) |
 | `.github/workflows/publish.yml` | 생성 → Cloudflare Pages(`linux-repo` 프로젝트) 배포 · 수동 / 앱 릴리스 신호 / 하루 1회 · 실행 Summary에 요청 · 진행 기록 |
 | `docs/SETUP.md` | 처음 설정 순서(사용자 할 일 포함) |
@@ -29,7 +29,8 @@ sudo dnf install nexa-clip
 
 ## 설계 요점
 
-- **패키지 파일은 싣지 않는다** — 색인의 `Filename`을 `_redirects`가 앱 GitHub Release 자산으로 302 보낸다(apt 3.x가 GitHub 2단 리다이렉트를 따라감 · 10-05 실측). 무결성 = 서명된 `InRelease`의 해시.
+- **패키지 파일을 사이트에 함께 싣는다**(2026-11-08~) — 색인의 `Filename` 경로에 앱 GitHub Release 자산을 그대로 둔다. 그 전에는 `_redirects`로 GitHub에 302 보냈는데, 11-08 GitHub `releases/download`가 한국 edge에서 모든 자산에 504를 내 사용자 설치가 막혔다. Cloudflare Pages 파일 한도(25 MiB)를 넘는 파일만 예전처럼 302. 무결성 = 서명된 `InRelease`의 해시.
+- 생성기는 자산을 **GitHub API 자산 경로**로 받고(5xx·타임아웃 재시도) browser URL은 폴백으로만 쓴다. 앱 릴리스는 `releases/latest`가 아니라 **태그 접두사**(`tag_prefix`+숫자)로 고른다(한 저장소의 다른 산출물 릴리스와 섞이지 않게).
 - **최신 정식 릴리스 하나만** 싣는다(Pages 배포 = 사이트 전체 교체 · 단순함 우선).
 - 서명은 **GitHub Actions**에서만(개인 키 = 시크릿) · Cloudflare는 결과물만 받는다(Direct Upload).
 - ⚠️ 한 번 발행한 Release 자산은 지우거나 다시 올리지 않는다.

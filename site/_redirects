@@ -1,1 +1,1 @@
-# 정적 리다이렉트(손으로 쓰는 것) — 아래에 scripts/build_repo.py가 패키지 파일 → GitHub Release 줄을 덧붙인다.
+# 정적 리다이렉트(손으로 쓰는 것) — 아래에 scripts/build_repo.py가 Pages 한도(25 MiB)를 넘는 패키지 파일만 → GitHub Release 줄을 덧붙인다(그 밖의 패키지는 사이트에 직접 싣는다 · 2026-11-08~).

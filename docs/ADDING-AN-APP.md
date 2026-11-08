@@ -15,7 +15,7 @@
 2. 로컬 확인(서명 키가 있는 PC — [KEYS.md §4](KEYS.md)):
    ```sh
    python3 scripts/build_repo.py --key 2522614046FAEE116F4A2FD706236F6AA8EB8FD6
-   bash scripts/test_apt_local.sh public <패키지 이름>   # 서명 검증 + 리다이렉트 내려받기 통과 확인
+   bash scripts/test_apt_local.sh public <패키지 이름>   # 서명 검증 + 패키지 내려받기 통과 확인
    ```
 3. 커밋·push → Actions의 `publish`를 수동 실행(또는 다음 정기 실행).
 4. 앱 저장소 release 워크플로 끝에 **발행 신호** 잡을 단다(릴리스가 **공개된 뒤** 저장소가 바로 갱신되게):
